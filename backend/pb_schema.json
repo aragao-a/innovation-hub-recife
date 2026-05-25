@@ -1,0 +1,98 @@
+[
+  {
+    "id": "institutions001",
+    "name": "institutions",
+    "type": "base",
+    "system": false,
+    "schema": [
+      { "id": "inst_name", "name": "name", "type": "text", "required": true, "options": { "min": 2, "max": 200 } },
+      { "id": "inst_type", "name": "type", "type": "text", "required": false, "options": {} },
+      { "id": "inst_city", "name": "city", "type": "text", "required": false, "options": {} },
+      { "id": "inst_admin", "name": "admin", "type": "text", "required": false, "options": {} }
+    ],
+    "indexes": [],
+    "listRule": "",
+    "viewRule": "",
+    "createRule": "@request.auth.id != ''",
+    "updateRule": "@request.auth.id != ''",
+    "deleteRule": null
+  },
+  {
+    "id": "researchpro01",
+    "name": "research_projects",
+    "type": "base",
+    "system": false,
+    "schema": [
+      { "id": "rp_title",      "name": "title",                 "type": "text",   "required": true,  "options": { "min": 3 } },
+      { "id": "rp_area",       "name": "area",                  "type": "text",   "required": true,  "options": {} },
+      { "id": "rp_keywords",   "name": "keywords",              "type": "text",   "required": false, "options": {} },
+      { "id": "rp_techdesc",   "name": "technical_description", "type": "editor", "required": true,  "options": {} },
+      { "id": "rp_simpdesc",   "name": "simplified_description","type": "editor", "required": false, "options": {} },
+      {
+        "id": "rp_status", "name": "status", "type": "select", "required": true,
+        "options": { "maxSelect": 1, "values": ["draft", "pending_approval", "approved", "hidden"] }
+      },
+      {
+        "id": "rp_maturity", "name": "maturity_level", "type": "select", "required": true,
+        "options": { "maxSelect": 1, "values": ["basic", "developing", "ready"] }
+      },
+      { "id": "rp_ods",        "name": "ods_tags",              "type": "json",   "required": false, "options": {} },
+      { "id": "rp_researcher", "name": "researcher",            "type": "relation","required": true,
+        "options": { "collectionId": "_pb_users_auth_", "cascadeDelete": false, "minSelect": null, "maxSelect": 1, "displayFields": ["name"] } },
+      { "id": "rp_inst",       "name": "institution",           "type": "relation","required": false,
+        "options": { "collectionId": "institutions001", "cascadeDelete": false, "minSelect": null, "maxSelect": 1, "displayFields": ["name"] } },
+      { "id": "rp_views",      "name": "view_count",            "type": "number", "required": false, "options": { "min": 0 } },
+      { "id": "rp_contacts",   "name": "contact_count",         "type": "number", "required": false, "options": { "min": 0 } }
+    ],
+    "indexes": [],
+    "listRule": "status = 'approved' || researcher = @request.auth.id || @request.auth.id != ''",
+    "viewRule": "status = 'approved' || researcher = @request.auth.id || @request.auth.id != ''",
+    "createRule": "@request.auth.id != '' && @request.auth.role = 'researcher'",
+    "updateRule": "researcher = @request.auth.id || @request.auth.role = 'institution'",
+    "deleteRule": null
+  },
+  {
+    "id": "contactreqs01",
+    "name": "contact_requests",
+    "type": "base",
+    "system": false,
+    "schema": [
+      { "id": "cr_research",     "name": "research",      "type": "relation", "required": true,
+        "options": { "collectionId": "researchpro01", "cascadeDelete": true, "maxSelect": 1 } },
+      { "id": "cr_org",          "name": "organization",  "type": "relation", "required": true,
+        "options": { "collectionId": "_pb_users_auth_", "cascadeDelete": false, "maxSelect": 1 } },
+      { "id": "cr_researcher",   "name": "researcher",    "type": "relation", "required": true,
+        "options": { "collectionId": "_pb_users_auth_", "cascadeDelete": false, "maxSelect": 1 } },
+      {
+        "id": "cr_status", "name": "status", "type": "select", "required": true,
+        "options": { "maxSelect": 1, "values": ["pending", "accepted", "rejected"] }
+      }
+    ],
+    "indexes": [],
+    "listRule": "organization = @request.auth.id || researcher = @request.auth.id",
+    "viewRule": "organization = @request.auth.id || researcher = @request.auth.id",
+    "createRule": "@request.auth.id != ''",
+    "updateRule": "organization = @request.auth.id || researcher = @request.auth.id",
+    "deleteRule": null
+  },
+  {
+    "id": "messages00001",
+    "name": "messages",
+    "type": "base",
+    "system": false,
+    "schema": [
+      { "id": "msg_cr",      "name": "contact_request", "type": "relation", "required": true,
+        "options": { "collectionId": "contactreqs01", "cascadeDelete": true, "maxSelect": 1 } },
+      { "id": "msg_sender",  "name": "sender",           "type": "relation", "required": true,
+        "options": { "collectionId": "_pb_users_auth_", "cascadeDelete": false, "maxSelect": 1 } },
+      { "id": "msg_content", "name": "content",          "type": "text",     "required": true,  "options": {} },
+      { "id": "msg_read",    "name": "read",              "type": "bool",     "required": false, "options": {} }
+    ],
+    "indexes": [],
+    "listRule": "@request.auth.id != '' && contact_request.organization = @request.auth.id || contact_request.researcher = @request.auth.id",
+    "viewRule": "@request.auth.id != ''",
+    "createRule": "@request.auth.id != ''",
+    "updateRule": "@request.auth.id != ''",
+    "deleteRule": null
+  }
+]
